@@ -4,7 +4,6 @@ import {
   Controls,
   Background,
   BackgroundVariant,
-  Panel,
   SelectionMode,
   MiniMap,
   useReactFlow,
@@ -263,14 +262,14 @@ export const MindMapCanvas = () => {
               </div>
             )}
 
-            <Panel position="bottom-center">
-              <Toolbar />
-            </Panel>
-            
             <BrainstormingModal />
           </ReactFlow>
         </div>
       </MindMapContextMenu>
+
+      <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
+        <Toolbar />
+      </div>
       
       <ShortcutCheatSheet />
     </div>

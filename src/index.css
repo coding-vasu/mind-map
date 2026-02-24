@@ -21,8 +21,9 @@
   /* Default: Dark Theme */
   --bg-base: #0a0a0f;
   --bg-surface: #111118;
-  --bg-glass: rgba(255, 255, 255, 0.05);
+  --bg-glass: rgba(15, 15, 25, 0.25);
   --bg-glass-hover: rgba(255, 255, 255, 0.09);
+  --bg-frosted: rgba(20, 20, 30, 0.35);
   --bg-overlay: rgba(10, 10, 15, 0.7);
 
   --accent-primary: #7c3aed;
@@ -54,8 +55,9 @@
 [data-theme='light'] {
   --bg-base: #f8f9ff;
   --bg-surface: #ffffff;
-  --bg-glass: rgba(255, 255, 255, 0.65);
+  --bg-glass: rgba(255, 255, 255, 0.45);
   --bg-glass-hover: rgba(255, 255, 255, 0.85);
+  --bg-frosted: rgba(255, 255, 255, 0.45);
   --bg-overlay: rgba(255, 255, 255, 0.9);
 
   --accent-primary: #6366f1;
@@ -91,6 +93,7 @@
   --color-bg-surface: var(--bg-surface);
   --color-bg-glass: var(--bg-glass);
   --color-bg-glass-hover: var(--bg-glass-hover);
+  --color-bg-frosted: var(--bg-frosted);
   --color-bg-overlay: var(--bg-overlay);
 
   /* 2. Color System — Accent */
@@ -164,6 +167,18 @@ body {
   border-radius: 16px;
   box-shadow: var(--shadow-node);
   transition: all 0.3s var(--ease-out);
+}
+
+.frosted-glass {
+  background: var(--color-bg-frosted);
+  backdrop-filter: blur(64px) saturate(210%) brightness(1.1);
+  -webkit-backdrop-filter: blur(64px) saturate(210%) brightness(1.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.45),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition: all 0.4s var(--ease-spring);
 }
 
 .node-default {

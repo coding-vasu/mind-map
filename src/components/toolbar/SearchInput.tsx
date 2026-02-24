@@ -77,10 +77,10 @@ export const SearchInput: React.FC<SearchInputProps> = ({ nodes }) => {
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        background: 'rgba(255,255,255,0.05)',
+        background: 'rgba(255,255,255,0.08)',
         borderRadius: '12px',
         padding: '0 12px',
-        border: '1px solid var(--color-border-subtle)',
+        border: '1px solid var(--color-border-active)',
         transition: 'all 0.2s',
         width: query ? '240px' : '160px',
       }}>

@@ -192,17 +192,16 @@ export const Toolbar: React.FC = () => {
   }, [theme]);
 
   return (
-    <div className="glass-panel animate-slide-in" style={{
+    <div className="frosted-glass animate-slide-in" style={{
       display: 'flex',
       alignItems: 'center',
       gap: '4px',
       padding: '4px 6px',
       zIndex: 10,
-      margin: '0 auto 32px auto',
+      margin: 0,
       borderRadius: '32px',
-      border: '1px solid var(--color-border-subtle)',
       boxShadow: 'var(--shadow-dock)',
-      background: 'var(--color-bg-glass)',
+      background: 'var(--color-bg-frosted)',
       transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
     }}>
       {/* Home & Space Name */}
