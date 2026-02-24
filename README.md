@@ -2,7 +2,7 @@
 
 A high-performance, futuristic, and premium mind-mapping application built with **React Flow**, **Zustand**, and **Immer**. Designed with a glassmorphic aesthetic and geared towards speed and productivity.
 
-![GitHub License](https://img.shields.io/github/license/vasuvallabh/mind-map)
+![GitHub License](https://img.shields.io/github/license/coding-vasu/mind-map)
 ![React Version](https://img.shields.io/badge/react-19.0-blue)
 ![Vite Version](https://img.shields.io/badge/vite-7.0-purple)
 
@@ -54,7 +54,7 @@ A high-performance, futuristic, and premium mind-mapping application built with 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/vasuvallabh/mind-map.git
+   git clone https://github.com/coding-vasu/mind-map.git
    ```
 2. Install dependencies:
    ```bash
