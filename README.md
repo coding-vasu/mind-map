@@ -5,6 +5,11 @@ A high-performance, futuristic, and premium mind-mapping application built with 
 ![GitHub License](https://img.shields.io/github/license/coding-vasu/mind-map)
 ![React Version](https://img.shields.io/badge/react-19.0-blue)
 ![Vite Version](https://img.shields.io/badge/vite-7.0-purple)
+![Deployment](https://img.shields.io/badge/deployed-Vercel-black?logo=vercel)
+
+[**Live Demo 🚀**](https://mind-map-explorer.vercel.app)
+
+![MindMap Explorer Screenshot](public/screenshot.png)
 
 ## ✨ Features
 
