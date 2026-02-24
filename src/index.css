@@ -171,14 +171,15 @@ body {
 
 .frosted-glass {
   background: var(--color-bg-frosted);
-  backdrop-filter: blur(64px) saturate(210%) brightness(1.1) !important;
-  -webkit-backdrop-filter: blur(64px) saturate(210%) brightness(1.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(24px) saturate(180%) brightness(1.1);
+  -webkit-backdrop-filter: blur(24px) saturate(180%) brightness(1.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 
-    0 10px 40px rgba(0, 0, 0, 0.45),
-    inset 0 1px 1px rgba(255, 255, 255, 0.2),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-  transition: all 0.4s var(--ease-spring);
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  transition: transform var(--duration-slow) var(--ease-spring), opacity var(--duration-base) var(--ease-out);
+  will-change: backdrop-filter, transform;
+  transform: translateZ(0); /* Force GPU acceleration */
 }
 
 .node-default {
