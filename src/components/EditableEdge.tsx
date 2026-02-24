@@ -1,22 +1,12 @@
+import React, { useState, memo, useMemo } from 'react';
 import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from '@xyflow/react';
-import { useState, memo } from 'react';
 import { useStore } from '../store';
+import { adjustAlpha } from '../utils/color';
 
-const adjustAlpha = (color: string, alpha: number): string => {
-  if (!color) return 'rgba(168, 85, 247, 0.35)';
-  if (color.startsWith('var')) return color;
-  if (color.startsWith('rgba')) {
-    return color.replace(/[\d.]+\)$/g, `${alpha})`);
-  }
-  if (color.startsWith('#')) {
-    const hex = color.length === 4 
-      ? '#' + color[1] + color[1] + color[2] + color[2] + color[3] + color[3]
-      : color;
-    return `${hex}${Math.round(alpha * 255).toString(16).padStart(2, '0')}`;
-  }
-  return color;
-};
-
+/**
+ * Custom editable edge component for the mind map.
+ * Supports double-click to edit labels and dynamic coloring based on source node.
+ */
 export const EditableEdge = memo(({
   id,
   sourceX,
@@ -33,10 +23,19 @@ export const EditableEdge = memo(({
 }: EdgeProps) => {
   const sourceNode = useStore((state) => state.nodes.find(n => n.id === source));
   const depthColors = useStore((state) => state.depthColors);
+  const updateEdgeLabel = useStore((state) => state.updateEdgeLabel);
   
-  const sourceColor = sourceNode?.data.color || 
-                      (sourceNode?.data.depth !== undefined ? depthColors[sourceNode.data.depth] : 'rgba(168, 85, 247, 0.35)');
-                      
+  const [isHovered, setIsHovered] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftText, setDraftText] = useState((label as string) || '');
+
+  // Determine edge color based on source node or hierarchy depth
+  const sourceColor = useMemo(() => {
+    if (sourceNode?.data.color) return sourceNode.data.color;
+    const depth = sourceNode?.data.depth ?? 0;
+    return depthColors[depth] || 'rgba(124, 58, 237, 0.4)';
+  }, [sourceNode, depthColors]);
+
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -46,11 +45,7 @@ export const EditableEdge = memo(({
     targetPosition,
   });
 
-  const [isHovered, setIsHovered] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   const isActive = isHovered || isEditing || selected;
-  const [draftText, setDraftText] = useState((label as string) || '');
-  const updateEdgeLabel = useStore((state) => state.updateEdgeLabel);
 
   const onDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -86,11 +81,13 @@ export const EditableEdge = memo(({
           stroke: isActive ? adjustAlpha(sourceColor, 0.9) : adjustAlpha(sourceColor, 0.4), 
           strokeWidth: isActive ? 2.5 : 1.5,
           filter: isActive 
-            ? `drop-shadow(0 0 calc(var(--glow-spread) / 4) color-mix(in srgb, ${sourceColor}, transparent calc(100% - var(--glow-opacity) * 100%)))` 
+            ? `drop-shadow(0 0 8px ${adjustAlpha(sourceColor, 0.4)})` 
             : undefined,
-          cursor: 'pointer'
+          cursor: 'pointer',
+          transition: 'all 0.2s ease'
         }} 
       />
+      
       {showLabel && (
         <EdgeLabelRenderer>
           <div
@@ -102,23 +99,21 @@ export const EditableEdge = memo(({
             }}
           >
             <div
-              className="glass-panel"
+              className={`glass-panel ${isEditing ? 'active' : ''}`}
+              onDoubleClick={onDoubleClick}
               style={{
-                padding: '4px 10px',
+                padding: '4px 12px',
                 fontSize: '11px',
                 fontWeight: 700,
                 color: 'var(--color-text-primary)',
-                background: 'var(--color-bg-overlay)',
-                backdropFilter: 'blur(8px)',
                 borderRadius: '20px',
                 border: isEditing ? '1.5px solid var(--color-accent-bright)' : '1px solid var(--color-border-subtle)',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                boxShadow: isActive ? '0 4px 15px rgba(0,0,0,0.2)' : '0 2px 8px rgba(0,0,0,0.1)',
                 cursor: 'text',
                 lineHeight: 1,
                 whiteSpace: 'nowrap',
-                animation: 'nodeIn 0.2s ease-out'
+                animation: 'nodeIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
               }}
-              onDoubleClick={onDoubleClick}
             >
               {isEditing ? (
                 <input
@@ -140,7 +135,7 @@ export const EditableEdge = memo(({
                   }}
                 />
               ) : (
-                <span style={{ fontFamily: 'var(--font-body)' }}>{displayText}</span>
+                <span>{displayText}</span>
               )}
             </div>
           </div>

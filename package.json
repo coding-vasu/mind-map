@@ -1,8 +1,14 @@
 {
   "name": "mind-map",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "A futuristic, glassmorphic mind-mapping tool built with React Flow and Zustand.",
+  "author": "Vasu Vallabh",
+  "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -20,8 +26,6 @@
     "@tiptap/starter-kit": "^3.20.0",
     "@xyflow/react": "^12.10.1",
     "clsx": "^2.1.1",
-    "elkjs": "^0.11.0",
-    "file-saver": "^2.0.5",
     "fuse.js": "^7.1.0",
     "html-to-image": "^1.11.13",
     "idb-keyval": "^6.2.2",

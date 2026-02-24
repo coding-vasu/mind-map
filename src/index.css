@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+/**
+ * MINDMAP DESIGN SYSTEM
+ * 
+ * This file defines the global design tokens and styling rules for the application.
+ * It uses a CSS variable system to support theming (Light/Dark) and glassmorphism effects.
+ * 
+ * Sections:
+ * 1. Root Variables (Dark/Light themes)
+ * 2. Tailwind Theme Extension (@theme)
+ * 3. Base Styles
+ * 4. Glassmorphism System
+ * 5. Node Component Styles
+ * 6. Animations & Keyframes
+ * 7. Background & Global Effects
+ * 8. UI Element Components
+ */
+
 :root {
   /* Default: Dark Theme */
   --bg-base: #0a0a0f;

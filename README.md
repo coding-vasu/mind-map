@@ -1,73 +1,74 @@
-# React + TypeScript + Vite
+# 🧠 MindMap - Futuristic Mind Mapping Tool
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A high-performance, futuristic, and premium mind-mapping application built with **React Flow**, **Zustand**, and **Immer**. Designed with a glassmorphic aesthetic and geared towards speed and productivity.
 
-Currently, two official plugins are available:
+![GitHub License](https://img.shields.io/github/license/vasuvallabh/mind-map)
+![React Version](https://img.shields.io/badge/react-19.0-blue)
+![Vite Version](https://img.shields.io/badge/vite-7.0-purple)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Features
 
-## React Compiler
+- **🚀 High Performance**: Built with `@xyflow/react` for smooth interaction with large maps.
+- **🎨 Glassmorphic UI**: A premium, futuristic look with light and dark mode support.
+- **📂 Space Management**: Organize your thoughts into multiple distinct workspaces (Spaces).
+- **⚡ Keyboard Centric**: Full support for keyboard shortcuts to maximize productivity.
+- **🛠 Semantic Styling**: Automatic node coloring based on branch or depth, with mood-based semantic icons.
+- **🔄 Auto-Layout**: Built-in Dagre layout engine for automatic organization (Horizontal, Vertical, Radial).
+- **📝 Rich Editing**: Tiptap-powered rich text editing within nodes.
+- **💾 Offline Ready**: Local-first persistence using IndexedDB (via `idb-keyval`).
+- **📥 Import/Export**: Save maps as JSON or export them as high-quality PNG images.
+- **🧠 Brainstorming Mode**: Rapidly add multiple topics in one go.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ⌨️ Keyboard Shortcuts
 
-## Expanding the ESLint configuration
+| Shortcut                 | Action                    |
+| :----------------------- | :------------------------ |
+| `Tab`                    | Add Child Node            |
+| `Enter`                  | Add Sibling Node          |
+| `Space` / `Double Click` | Edit Node Content         |
+| `Backspace` / `Delete`   | Delete Node (and subtree) |
+| `B`                      | Toggle Brainstorm Mode    |
+| `Cmd/Ctrl + Z`           | Undo                      |
+| `Cmd/Ctrl + Shift + Z`   | Redo                      |
+| `Arrow Keys`             | Navigate between nodes    |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠 Tech Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Framework**: [React 19](https://reactjs.org/)
+- **Node Engine**: [React Flow (v12)](https://reactflow.dev/)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand) with [Immer](https://immerjs.github.io/immer/) and [Zundo](https://github.com/charkour/zundo)
+- **Styling**: Vanilla CSS with futuristic glassmorphism tokens
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Rich Text**: [Tiptap](https://tiptap.dev/)
+- **Layout**: [Dagre](https://github.com/dagrejs/dagre)
+- **Persistence**: IndexedDB via [idb-keyval](https://github.com/jakearchibald/idb-keyval)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🚀 Getting Started
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Prerequisites
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Installation
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/vasuvallabh/mind-map.git
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for details on our code of conduct and the process for submitting pull requests.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
