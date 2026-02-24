@@ -197,12 +197,8 @@ export const Toolbar: React.FC = () => {
       alignItems: 'center',
       gap: '4px',
       padding: '4px 6px',
-      zIndex: 10,
-      margin: 0,
       borderRadius: '32px',
-      boxShadow: 'var(--shadow-dock)',
-      background: 'var(--color-bg-frosted)',
-      transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      transition: 'all 0.4s var(--ease-spring)',
     }}>
       {/* Home & Space Name */}
       <div style={{ display: 'flex', gap: '4px', padding: '0 8px', borderRight: '1px solid var(--color-border-subtle)', alignItems: 'center' }}>
