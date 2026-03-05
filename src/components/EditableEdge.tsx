@@ -83,8 +83,8 @@ export const EditableEdge = memo(({
           filter: isActive 
             ? `drop-shadow(0 0 8px ${adjustAlpha(sourceColor, 0.4)})` 
             : undefined,
+          borderColor: sourceColor,
           cursor: 'pointer',
-          transition: 'all 0.2s ease'
         }} 
       />
       
@@ -112,7 +112,6 @@ export const EditableEdge = memo(({
                 cursor: 'text',
                 lineHeight: 1,
                 whiteSpace: 'nowrap',
-                animation: 'nodeIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
               }}
             >
               {isEditing ? (

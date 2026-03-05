@@ -5,8 +5,13 @@ import { SpaceManager } from './components/SpaceManager';
 import { useStore } from './store';
 
 function App() {
-  const { activeSpaceId, createSpace } = useStore();
+  const { activeSpaceId, createSpace, theme } = useStore();
   const migrationRan = useRef(false);
+
+  // Apply theme to document root whenever it changes
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   // One-time migration: if legacy nodes exist with no spaces, migrate them into a default space
   useEffect(() => {

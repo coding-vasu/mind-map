@@ -275,11 +275,7 @@ export const useStore = create<AppState>()(
          * Collapse or expand a node's subtree
          */
         toggleCollapse: (nodeId: string) => {
-          const { nodes, edges } = get() as AppState;
-          const node = nodes.find((n) => n.id === nodeId);
-          if (!node) return;
-
-          const isCollapsed = !node.data.collapsed;
+          const { edges, layoutDagre } = get() as AppState;
           
           const isNodeHidden = (id: string, currentNodes: readonly AppNode[]): boolean => {
             const incomingEdges = edges.filter(e => e.target === id);
@@ -293,7 +289,7 @@ export const useStore = create<AppState>()(
 
           set((draft) => {
             const n = draft.nodes.find(x => x.id === nodeId);
-            if (n) n.data.collapsed = isCollapsed;
+            if (n) n.data.collapsed = !n.data.collapsed;
             draft.nodes.forEach(node => {
               node.hidden = isNodeHidden(node.id, draft.nodes as AppNode[]);
             });
@@ -301,7 +297,10 @@ export const useStore = create<AppState>()(
               edge.hidden = isNodeHidden(edge.target, draft.nodes as AppNode[]);
             });
           });
+          
+          layoutDagre();
         },
+
 
         // --- React Flow Handlers ---
 

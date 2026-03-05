@@ -5,13 +5,17 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 
 import { useStore } from '../store';
-import { type AppNode } from '../store/types';
+import { type MindMapNodeData } from '../store/types';
 import { adjustAlpha } from '../utils/color';
+
+interface MindMapNodeProps extends NodeProps {
+  data: MindMapNodeData;
+}
 
 /**
  * Custom MindMap Node component for React Flow
  */
-export const MindMapNode = memo(({ id, data, selected }: NodeProps<AppNode>) => {
+export const MindMapNode = memo(({ id, data, selected }: MindMapNodeProps) => {
   const [isEditing, setIsEditing] = useState(false);
   
   // Store actions and state
@@ -149,7 +153,7 @@ export const MindMapNode = memo(({ id, data, selected }: NodeProps<AppNode>) => 
 
   return (
     <div
-      className={`mind-map-node animate-node-in ${isRoot ? 'node-root' : 'node-default'} ${selected ? 'node-selected' : ''}`}
+      className={`mind-map-node ${isRoot ? 'node-root' : 'node-default'} ${selected ? 'node-selected' : ''}`}
       onDoubleClick={() => setIsEditing(true)}
       style={{
         textAlign: 'center',
@@ -166,7 +170,6 @@ export const MindMapNode = memo(({ id, data, selected }: NodeProps<AppNode>) => 
         borderWidth: isRoot || selected ? '2.5px' : '1.5px',
         ...shapeStyles,
         transform: selected ? 'scale(1.04)' : 'scale(1)',
-        transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
         zIndex: selected ? 50 : 1,
       }}
     >
@@ -224,7 +227,6 @@ export const MindMapNode = memo(({ id, data, selected }: NodeProps<AppNode>) => 
                 width: `${progress}%`, 
                 height: '100%', 
                 background: isFullyCompleted ? 'var(--color-status-done)' : 'var(--color-accent-bright)',
-                transition: 'width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
                 boxShadow: isFullyCompleted ? '0 0 10px var(--color-status-done)' : 'none'
               }} 
             />
@@ -252,7 +254,6 @@ export const MindMapNode = memo(({ id, data, selected }: NodeProps<AppNode>) => 
             color: nodeColor,
             zIndex: 10,
             boxShadow: 'var(--shadow-node)',
-            transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
             opacity: 0.9,
             display: 'flex',
           }}

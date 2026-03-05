@@ -244,19 +244,9 @@ body {
 
 /* 8. Motion & Animation — Keyframes */
 
-@keyframes nodeIn {
-  from { opacity: 0; transform: scale(0.85); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
 @keyframes glowPulse {
   0%, 100% { box-shadow: 0 0 var(--glow-spread) color-mix(in srgb, var(--color-accent-bright), transparent calc(100% - var(--glow-opacity) * 100%)); }
   50%       { box-shadow: 0 0 calc(var(--glow-spread) * 1.5) color-mix(in srgb, var(--color-accent-bright), transparent calc(100% - (var(--glow-opacity) * 1.5) * 100%)); }
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes float {
@@ -344,14 +334,6 @@ body {
 
 [data-theme='light'] .vignette-overlay {
   background: radial-gradient(circle at center, transparent 50%, rgba(0, 0, 0, 0.02) 140%);
-}
-
-.animate-node-in {
-  animation: nodeIn var(--duration-base) var(--ease-spring) forwards;
-}
-
-.animate-slide-in {
-  animation: slideIn 200ms var(--ease-out) forwards;
 }
 
 /* UI Elements */
@@ -471,6 +453,39 @@ kbd {
 
 .context-menu-item.danger {
   color: var(--color-danger);
+}
+
+/* Dashboard Utilities */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.dashboard-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-card:hover .hover-actions {
+  opacity: 1 !important;
+}
+
+.sidebar-item-active {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-bright);
+}
+
+.sidebar-item-active i {
+  opacity: 1;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Tiptap Editor Customization */
