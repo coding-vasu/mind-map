@@ -8,6 +8,7 @@ export const useMindMapHotkeys = () => {
   const {
     nodes,
     edges,
+    addRootNode,
     addNode,
     addSibling,
     deleteNode,
@@ -25,6 +26,12 @@ export const useMindMapHotkeys = () => {
     selectedNodes.forEach((node) => deleteNode(node.id));
   }, { enableOnFormTags: false }, [selectedNodes, deleteNode]);
 
+  // Add root
+  useHotkeys('alt+n', (e) => {
+    e.preventDefault();
+    addRootNode();
+  }, { enableOnFormTags: false }, [addRootNode]);
+
   // Add child
   useHotkeys('tab', (e) => {
     e.preventDefault();
@@ -36,10 +43,10 @@ export const useMindMapHotkeys = () => {
   // Add sibling
   useHotkeys('enter', (e) => {
     e.preventDefault();
-    if (selectedNodes.length === 1 && selectedNodes[0].id !== 'root') {
+    if (selectedNodes.length === 1 && edges.some(e => e.target === selectedNodes[0].id)) {
       addSibling(selectedNodes[0].id);
     }
-  }, { enableOnFormTags: false }, [selectedNodes, addSibling]);
+  }, { enableOnFormTags: false }, [selectedNodes, edges, addSibling]);
 
   // Undo
   useHotkeys('meta+z, ctrl+z', (e) => {

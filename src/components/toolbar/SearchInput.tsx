@@ -77,14 +77,14 @@ export const SearchInput: React.FC<SearchInputProps> = ({ nodes }) => {
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        background: 'rgba(255,255,255,0.08)',
-        borderRadius: '12px',
-        padding: '0 12px',
-        border: '1px solid var(--color-border-active)',
+        background: 'transparent',
+        borderRadius: '10px',
+        padding: '0 4px',
+        border: 'none',
         transition: 'all 0.2s',
-        width: query ? '240px' : '160px',
+        width: query ? '180px' : '120px',
       }}>
-        <Search size={16} color="var(--color-text-secondary)" />
+        <Search size={14} color="var(--color-text-secondary)" />
         <div style={{ position: 'relative', flex: 1 }}>
           <input
             value={query}
@@ -95,8 +95,8 @@ export const SearchInput: React.FC<SearchInputProps> = ({ nodes }) => {
               background: 'transparent',
               border: 'none',
               color: 'var(--color-text-primary)',
-              fontSize: '13px',
-              padding: '8px 10px',
+              fontSize: '12px',
+              padding: '6px 8px',
               width: '100%',
               outline: 'none',
               fontWeight: 500,

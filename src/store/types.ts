@@ -7,6 +7,17 @@ import {
 } from '@xyflow/react';
 
 /**
+ * A grouping level above Spaces (Mind Maps)
+ */
+export type Workspace = {
+  id: string;
+  name: string;
+  type: 'personal' | 'team' | 'project';
+  icon?: string;
+  createdAt: number;
+};
+
+/**
  * Data associated with a MindMap node
  */
 export type MindMapNodeData = {
@@ -21,6 +32,9 @@ export type MindMapNodeData = {
   isTask?: boolean;
   isCompleted?: boolean;
   mood?: string;
+  layoutDirection?: 'LR' | 'RL' | 'TB' | 'BT' | 'radial';
+  colorMode?: 'branch' | 'depth';
+  activePaletteName?: string;
 };
 
 /**
@@ -38,6 +52,8 @@ export type Space = {
   edges: Edge[];
   createdAt: number;
   lastModified: number;
+  theme?: 'light' | 'dark';
+  workspaceId?: string;
 };
 
 /**
@@ -48,6 +64,14 @@ export interface AppState {
   edges: Edge[];
   spaces: Space[];
   activeSpaceId: string | null;
+  
+  // Workspace Management
+  workspaces: Workspace[];
+  activeWorkspaceId: string | null;
+  createWorkspace: (name: string) => void;
+  switchWorkspace: (id: string | null) => void;
+  updateWorkspaceName: (id: string, name: string) => void;
+  deleteWorkspace: (id: string) => void;
   
   // Space Actions
   createSpace: (name: string) => void;
@@ -62,6 +86,7 @@ export interface AppState {
   onConnect: OnConnect;
   
   // Node Actions
+  addRootNode: (label?: string, position?: { x: number, y: number }) => void;
   addNode: (parentNodeId: string, label?: string) => void;
   addSibling: (nodeId: string, label?: string) => void;
   bulkAddNodes: (parentNodeId: string, labels: string[]) => void;

@@ -1,6 +1,6 @@
 import React from 'react';
 import * as Popover from '@radix-ui/react-popover';
-import { Layout as LayoutIcon, ArrowRight, ArrowLeft, ArrowDown, ArrowUp } from 'lucide-react';
+import { Layout as LayoutIcon, ArrowRight, ArrowLeft, ArrowDown, ArrowUp, CircleDot } from 'lucide-react';
 
 interface LayoutPopoverProps {
   layoutDagre: (direction: 'LR' | 'RL' | 'TB' | 'BT' | 'radial') => void;
@@ -19,6 +19,7 @@ export const LayoutPopover: React.FC<LayoutPopoverProps> = ({
     { dir: 'RL' as const, icon: <ArrowLeft size={18} />, label: 'Reverse' },
     { dir: 'TB' as const, icon: <ArrowDown size={18} />, label: 'Vertical' },
     { dir: 'BT' as const, icon: <ArrowUp size={18} />, label: 'Bottom-Up' },
+    { dir: 'radial' as const, icon: <CircleDot size={18} />, label: 'Radial' },
   ];
 
   return (
@@ -31,13 +32,13 @@ export const LayoutPopover: React.FC<LayoutPopoverProps> = ({
             background: 'transparent',
             border: 'none',
             color: 'var(--color-text-primary)',
-            padding: '8px',
-            borderRadius: '12px',
+            padding: '6px',
+            borderRadius: '10px',
             cursor: 'pointer',
             transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
           }}
         >
-          <LayoutIcon size={20} />
+          <LayoutIcon size={18} />
         </button>
       </Popover.Trigger>
       <Popover.Portal>

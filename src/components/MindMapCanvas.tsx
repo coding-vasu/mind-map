@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import {
   ReactFlow,
   Controls,
@@ -41,6 +41,7 @@ export const MindMapCanvas = () => {
     onNodesChange,
     onEdgesChange,
     onConnect,
+    addRootNode,
     addNode,
     addSibling,
     deleteNode,
@@ -56,6 +57,22 @@ export const MindMapCanvas = () => {
   const [helperLines, setHelperLines] = useState<{ horizontal?: number; vertical?: number }>({});
   const [minimapHoverNode, setMinimapHoverNode] = useState<AppNode | null>(null);
   const [minimapPos, setMinimapPos] = useState({ x: 0, y: 0 });
+
+  // Track node count to trigger fitView on creation
+  const lastNodesCount = useRef(nodes.length);
+
+  // Auto-fit view when a new node is created
+  useEffect(() => {
+    if (nodes.length > lastNodesCount.current) {
+      // Small timeout to ensure the new node is measured by React Flow
+      const timer = setTimeout(() => {
+        fitView({ duration: 500, padding: 0.2 });
+      }, 100);
+      lastNodesCount.current = nodes.length;
+      return () => clearTimeout(timer);
+    }
+    lastNodesCount.current = nodes.length;
+  }, [nodes.length, fitView]);
 
   // Initialize custom hotkeys
   useMindMapHotkeys();
@@ -170,6 +187,7 @@ export const MindMapCanvas = () => {
       
       <MindMapContextMenu
         selectedNodes={selectedNodes}
+        addRootNode={addRootNode}
         addNode={addNode}
         addSibling={addSibling}
         toggleTask={toggleTask}

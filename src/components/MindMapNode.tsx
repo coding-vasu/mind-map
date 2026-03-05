@@ -12,10 +12,8 @@ interface MindMapNodeProps extends NodeProps {
   data: MindMapNodeData;
 }
 
-/**
- * Custom MindMap Node component for React Flow
- */
-export const MindMapNode = memo(({ id, data, selected }: MindMapNodeProps) => {
+// Custom MindMap Node component for React Flow
+export const MindMapNode = memo(({ id, data, selected, sourcePosition, targetPosition }: MindMapNodeProps) => {
   const [isEditing, setIsEditing] = useState(false);
   
   // Store actions and state
@@ -26,11 +24,14 @@ export const MindMapNode = memo(({ id, data, selected }: MindMapNodeProps) => {
   const depthColors = useStore((state) => state.depthColors);
   const editingNodeId = useStore((state) => state.editingNodeId);
   const setEditingNodeId = useStore((state) => state.setEditingNodeId);
-  const layoutDirection = useStore((state) => state.layoutDirection);
+  const globalLayoutDirection = useStore((state) => state.layoutDirection);
   const nodes = useStore((state) => state.nodes);
   const toggleComplete = useStore((state) => state.toggleComplete);
   const colorMode = useStore((state) => state.colorMode);
   
+  const isActuallyRoot = useMemo(() => !edges.some(e => e.target === id), [id, edges]);
+  const effectiveLayoutDirection = data.layoutDirection || globalLayoutDirection;
+
   // Task progress calculation
   const { childTasks, progress, isFullyCompleted } = useMemo(() => {
     const children = nodes.filter(n => edges.some(e => e.source === id && e.target === n.id));
@@ -56,31 +57,17 @@ export const MindMapNode = memo(({ id, data, selected }: MindMapNodeProps) => {
     return depthColors[depth] || depthColors[0];
   }, [data.mood, data.isManualColor, data.color, depth, depthColors, colorMode]);
   
-  const isRoot = id === 'root';
   const outgoingEdges = edges.filter(e => e.source === id);
   const hasChildren = outgoingEdges.length > 0;
 
-  // Handle position logic based on layout
-  const { targetPos, sourcePos, isVertical, isReverse } = useMemo(() => {
-    let tp = Position.Left;
-    let sp = Position.Right;
-    let vert = false;
-    let rev = false;
-
-    if (layoutDirection === 'TB') {
-      tp = Position.Top; sp = Position.Bottom; vert = true;
-    } else if (layoutDirection === 'BT') {
-      tp = Position.Bottom; sp = Position.Top; vert = true; rev = true;
-    } else if (layoutDirection === 'RL') {
-      tp = Position.Right; sp = Position.Left; rev = true;
-    } else if (layoutDirection === 'radial' && !isRoot) {
-      const node = nodes.find(n => n.id === id);
-      if (node && node.position.x < 0) {
-        tp = Position.Right; sp = Position.Left; rev = true;
-      }
-    }
-    return { targetPos: tp, sourcePos: sp, isVertical: vert, isReverse: rev };
-  }, [layoutDirection, id, isRoot, nodes]);
+  // Handle position logic based on props
+  const { targetPos, sourcePos, isVertical } = useMemo(() => {
+    const tp = targetPosition || Position.Left;
+    const sp = sourcePosition || Position.Right;
+    const vert = tp === Position.Top || tp === Position.Bottom;
+    
+    return { targetPos: tp, sourcePos: sp, isVertical: vert };
+  }, [targetPosition, sourcePosition]);
 
   // Editor initialization
   const editor = useEditor({
@@ -138,6 +125,7 @@ export const MindMapNode = memo(({ id, data, selected }: MindMapNodeProps) => {
   };
 
   const shapeStyles = useMemo(() => {
+    const isRoot = isActuallyRoot; // Use more robust root check
     switch (data.shape) {
       case 'diamond': return { clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)', borderRadius: 0, minWidth: '100px', minHeight: '80px' };
       case 'hexagon': return { clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)', borderRadius: 0, minWidth: '120px' };
@@ -145,15 +133,18 @@ export const MindMapNode = memo(({ id, data, selected }: MindMapNodeProps) => {
       case 'pill': return { borderRadius: '24px', padding: '8px 20px' };
       default: return { borderRadius: isRoot ? '16px' : '12px', padding: '8px 20px' };
     }
-  }, [data.shape, isRoot]);
+  }, [data.shape, isActuallyRoot]);
 
-  const collapseButtonStyle = isVertical 
-    ? { bottom: isReverse ? 'auto' : '-10px', top: isReverse ? '-10px' : 'auto', left: '50%', transform: 'translateX(-50%)' }
-    : { right: isReverse ? 'auto' : '-10px', left: isReverse ? '-10px' : 'auto', top: '50%', transform: 'translateY(-50%)' };
+  const collapseButtonStyle = useMemo(() => {
+    if (sourcePos === Position.Bottom) return { bottom: '-10px', left: '50%', transform: 'translateX(-50%)' };
+    if (sourcePos === Position.Top) return { top: '-10px', left: '50%', transform: 'translateX(-50%)' };
+    if (sourcePos === Position.Left) return { left: '-10px', top: '50%', transform: 'translateY(-50%)' };
+    return { right: '-10px', top: '50%', transform: 'translateY(-50%)' };
+  }, [sourcePos]);
 
   return (
     <div
-      className={`mind-map-node ${isRoot ? 'node-root' : 'node-default'} ${selected ? 'node-selected' : ''}`}
+      className={`mind-map-node ${isActuallyRoot ? 'node-root' : 'node-default'} ${selected ? 'node-selected' : ''}`}
       onDoubleClick={() => setIsEditing(true)}
       style={{
         textAlign: 'center',
@@ -162,12 +153,12 @@ export const MindMapNode = memo(({ id, data, selected }: MindMapNodeProps) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: selected ? 'var(--color-accent-soft)' : (isRoot ? 'var(--color-accent-soft)' : 'var(--color-bg-surface)'),
+        background: selected ? 'var(--color-accent-soft)' : (isActuallyRoot ? 'var(--color-accent-soft)' : 'var(--color-bg-surface)'),
         boxShadow: selected
           ? `0 0 calc(var(--glow-spread) * 1.5) ${adjustAlpha(nodeColor, theme === 'light' ? 0.15 : 0.4)}, 0 0 0 2px ${nodeColor}`
           : `var(--shadow-node), 0 0 calc(var(--glow-spread) / 2) ${adjustAlpha(nodeColor, theme === 'light' ? 0.05 : 0.2)}`,
         borderColor: nodeColor,
-        borderWidth: isRoot || selected ? '2.5px' : '1.5px',
+        borderWidth: isActuallyRoot || selected ? '2.5px' : '1.5px',
         ...shapeStyles,
         transform: selected ? 'scale(1.04)' : 'scale(1)',
         zIndex: selected ? 50 : 1,
@@ -177,8 +168,8 @@ export const MindMapNode = memo(({ id, data, selected }: MindMapNodeProps) => {
         type="target" 
         position={targetPos} 
         style={{ 
-          opacity: isRoot ? 0 : 1,
-          pointerEvents: isRoot ? 'none' : 'auto',
+          opacity: isActuallyRoot ? 0 : 1,
+          pointerEvents: isActuallyRoot ? 'none' : 'auto',
           top: isVertical ? (targetPos === Position.Top ? '0px' : 'auto') : '50%',
           bottom: isVertical ? (targetPos === Position.Bottom ? '0px' : 'auto') : 'auto',
           left: isVertical ? '50%' : (targetPos === Position.Left ? '0px' : 'auto'),
@@ -273,10 +264,40 @@ export const MindMapNode = memo(({ id, data, selected }: MindMapNodeProps) => {
       )}
 
       {/* Connection Handles */}
-      {isRoot && layoutDirection === 'radial' ? (
+      {isActuallyRoot && effectiveLayoutDirection === 'radial' ? (
         <>
-          <Handle type="source" position={Position.Left} id="left" style={{ left: '-4px', top: '50%', transform: 'translateY(-50%)' }} />
-          <Handle type="source" position={Position.Right} id="right" style={{ right: '-4px', top: '50%', transform: 'translateY(-50%)' }} />
+          <Handle 
+            type="source" 
+            position={Position.Left} 
+            id="left" 
+            style={{ 
+              left: '-4px', 
+              top: '50%', 
+              transform: 'translateY(-50%)',
+              background: nodeColor,
+              width: '8px',
+              height: '8px',
+              border: '2px solid var(--color-bg-base)',
+              opacity: 1,
+              zIndex: 20
+            }} 
+          />
+          <Handle 
+            type="source" 
+            position={Position.Right} 
+            id="right" 
+            style={{ 
+              right: '-4px', 
+              top: '50%', 
+              transform: 'translateY(-50%)',
+              background: nodeColor,
+              width: '8px',
+              height: '8px',
+              border: '2px solid var(--color-bg-base)',
+              opacity: 1,
+              zIndex: 20
+            }} 
+          />
         </>
       ) : (
         <Handle 

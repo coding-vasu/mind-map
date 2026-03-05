@@ -60,13 +60,13 @@ export const AppearancePopover: React.FC<AppearancePopoverProps> = ({
             background: 'transparent',
             border: 'none',
             color: selectedNodes.length > 0 ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
-            padding: '8px',
-            borderRadius: '12px',
+            padding: '6px',
+            borderRadius: '10px',
             cursor: selectedNodes.length > 0 ? 'pointer' : 'not-allowed',
             transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
           }}
         >
-          <Palette size={20} />
+          <Palette size={18} />
         </button>
       </Popover.Trigger>
       <Popover.Portal>
@@ -120,7 +120,7 @@ export const AppearancePopover: React.FC<AppearancePopoverProps> = ({
             ))}
           </div>
 
-          <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '420px', overflowY: 'auto' }}>
+          <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '420px', overflowY: 'auto' }}>
             {activeTab === 'theme' && (
               <div className="animate-in fade-in slide-in-from-top-1 duration-200" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -158,8 +158,8 @@ export const AppearancePopover: React.FC<AppearancePopoverProps> = ({
                         key={p.name}
                         onClick={() => applyPalette(p)}
                         style={{
-                          padding: '10px 4px',
-                          borderRadius: '12px',
+                          padding: '8px 4px',
+                          borderRadius: '10px',
                           background: activePaletteName === p.name ? 'var(--color-accent-soft)' : 'rgba(255,255,255,0.03)',
                           border: activePaletteName === p.name ? '1px solid var(--color-accent-bright)' : '1px solid var(--color-border-subtle)',
                           display: 'flex',
@@ -212,28 +212,32 @@ export const AppearancePopover: React.FC<AppearancePopoverProps> = ({
                   </div>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                    {nodeMoods.map((mood) => (
-                      <button
-                        key={mood.name}
-                        onClick={() => handleColorChange(mood.color, mood.name)}
-                        style={{
-                          padding: '10px 4px',
-                          borderRadius: '12px',
-                          background: 'rgba(255,255,255,0.03)',
-                          border: '1px solid var(--color-border-subtle)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '8px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          color: mood.color
-                        }}
-                      >
-                        <div style={{ color: mood.color }}>{mood.icon}</div>
-                        <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--color-text-secondary)' }}>{mood.name}</span>
-                      </button>
-                    ))}
+                    {nodeMoods.map((mood) => {
+                      const isActive = selectedNodes.length > 0 && selectedNodes.every(n => n.data && (n.data as any).mood === mood.name);
+                      return (
+                        <button
+                          key={mood.name}
+                          onClick={() => handleColorChange(mood.color, mood.name)}
+                          style={{
+                            padding: '8px 4px',
+                            borderRadius: '10px',
+                            background: isActive ? 'var(--color-accent-soft)' : 'rgba(255,255,255,0.03)',
+                            border: isActive ? '1px solid var(--color-accent-bright)' : '1px solid var(--color-border-subtle)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '8px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            color: mood.color,
+                            boxShadow: isActive ? '0 0 10px var(--color-accent-glow)' : 'none'
+                          }}
+                        >
+                          <div style={{ color: mood.color }}>{mood.icon}</div>
+                          <span style={{ fontSize: '9px', fontWeight: 700, color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}>{mood.name}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -246,28 +250,32 @@ export const AppearancePopover: React.FC<AppearancePopoverProps> = ({
                   </div>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                    {nodeShapes.map((shape) => (
-                      <button
-                        key={shape.value}
-                        onClick={() => handleShapeChange(shape.value)}
-                        style={{
-                          padding: '10px 4px',
-                          borderRadius: '12px',
-                          background: 'rgba(255,255,255,0.03)',
-                          border: '1px solid var(--color-border-subtle)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '8px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          color: 'var(--color-text-primary)'
-                        }}
-                      >
-                        <div style={{ color: 'var(--color-accent-bright)' }}>{shape.icon}</div>
-                        <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--color-text-secondary)' }}>{shape.name}</span>
-                      </button>
-                    ))}
+                    {nodeShapes.map((shape) => {
+                      const isActive = selectedNodes.length > 0 && selectedNodes.every(n => n.data.shape === shape.value);
+                      return (
+                        <button
+                          key={shape.value}
+                          onClick={() => handleShapeChange(shape.value)}
+                          style={{
+                            padding: '8px 4px',
+                            borderRadius: '10px',
+                            background: isActive ? 'var(--color-accent-soft)' : 'rgba(255,255,255,0.03)',
+                            border: isActive ? '1px solid var(--color-accent-bright)' : '1px solid var(--color-border-subtle)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '8px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            color: 'var(--color-text-primary)',
+                            boxShadow: isActive ? '0 0 10px var(--color-accent-glow)' : 'none'
+                          }}
+                        >
+                          <div style={{ color: isActive ? 'var(--color-accent-bright)' : 'var(--color-text-secondary)' }}>{shape.icon}</div>
+                          <span style={{ fontSize: '9px', fontWeight: 700, color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}>{shape.name}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

@@ -4,12 +4,13 @@ import {
   LayoutGrid, 
   Star, 
   FolderOpen,
-  Brain
+  Brain,
+  PlusCircle
 } from 'lucide-react';
 import { useStore } from '../../store';
 import type { Space } from '../../store/types';
 
-type SidebarFilter = 'recents' | 'all' | 'favorites' | 'personal';
+type SidebarFilter = 'recents' | 'all' | 'favorites' | string;
 
 interface SpaceSidebarProps {
   activeFilter: SidebarFilter;
@@ -84,8 +85,22 @@ export const SpaceSidebar: React.FC<SpaceSidebarProps> = ({
   spaces,
   favorites,
 }) => {
-  const { toggleTheme, theme } = useStore();
+  const { 
+    toggleTheme, 
+    theme, 
+    workspaces, 
+    activeWorkspaceId, 
+    switchWorkspace, 
+    createWorkspace 
+  } = useStore();
   const favCount = spaces.filter(s => favorites.has(s.id)).length;
+
+  const handleCreateWorkspace = () => {
+    const name = prompt('Enter workspace name:');
+    if (name?.trim()) {
+      createWorkspace(name.trim());
+    }
+  };
 
   return (
     <div style={{
@@ -119,8 +134,35 @@ export const SpaceSidebar: React.FC<SpaceSidebarProps> = ({
       <SidebarItem icon={<LayoutGrid />} label="All Mind Maps" active={activeFilter === 'all'} onClick={() => onFilterChange('all')} badge={spaces.length} />
       <SidebarItem icon={<Star />} label="Favorites" active={activeFilter === 'favorites'} onClick={() => onFilterChange('favorites')} badge={favCount > 0 ? favCount : undefined} />
 
-      <SectionLabel>Workspaces</SectionLabel>
-      <SidebarItem icon={<FolderOpen />} label="Personal" active={activeFilter === 'personal'} onClick={() => onFilterChange('personal')} badge={spaces.length} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '20px', marginBottom: '6px', paddingRight: '8px' }}>
+        <SectionLabel>Workspaces</SectionLabel>
+        <button 
+          onClick={handleCreateWorkspace}
+          style={{ 
+            background: 'none', border: 'none', color: 'var(--color-text-muted)', 
+            cursor: 'pointer', display: 'flex', padding: '4px', borderRadius: '6px',
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--color-text-primary)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
+        >
+          <PlusCircle size={14} />
+        </button>
+      </div>
+      
+      {workspaces.map(ws => (
+        <SidebarItem 
+          key={ws.id}
+          icon={<FolderOpen />} 
+          label={ws.name} 
+          active={activeWorkspaceId === ws.id && activeFilter !== 'recents' && activeFilter !== 'all' && activeFilter !== 'favorites'} 
+          onClick={() => {
+            switchWorkspace(ws.id);
+            onFilterChange(ws.id);
+          }} 
+          badge={spaces.filter(s => s.workspaceId === ws.id).length || undefined} 
+        />
+      ))}
 
       {/* Spacer */}
       <div style={{ flex: 1 }} />

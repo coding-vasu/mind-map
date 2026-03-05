@@ -14,7 +14,7 @@ import { SpaceTopbar } from './space/SpaceTopbar';
 import type { Space } from '../store/types';
 import { SpaceListRow } from './space/SpaceListRow';
 
-type SidebarFilter = 'recents' | 'all' | 'favorites' | 'personal';
+type SidebarFilter = string;
 type ViewMode = 'grid' | 'list';
 
 
@@ -23,10 +23,10 @@ type ViewMode = 'grid' | 'list';
  * Fully functional Figma-style dashboard
  */
 export const SpaceManager: React.FC = () => {
-  const { spaces, createSpace, switchSpace, deleteSpace, activeSpaceId, theme } = useStore();
+  const { spaces, createSpace, switchSpace, deleteSpace, activeSpaceId, theme, activeWorkspaceId, workspaces } = useStore();
 
   // UI State
-  const [activeFilter, setActiveFilter] = useState<SidebarFilter>('recents');
+  const [activeFilter, setActiveFilter] = useState<SidebarFilter>(activeWorkspaceId || 'personal');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [favorites, setFavorites] = useState<Set<string>>(() => {
@@ -111,18 +111,22 @@ export const SpaceManager: React.FC = () => {
       case 'favorites':
         return result.filter(s => favorites.has(s.id)).sort((a, b) => b.lastModified - a.lastModified);
       case 'personal':
-        return result.sort((a, b) => a.createdAt - b.createdAt);
+        return result.filter(s => s.workspaceId === 'personal').sort((a, b) => a.createdAt - b.createdAt);
       default:
-        return result;
+        // Assume it's a workspace ID
+        return result.filter(s => s.workspaceId === activeFilter).sort((a, b) => b.lastModified - a.lastModified);
     }
   }, [spaces, searchQuery, activeFilter, favorites]);
 
-  const filterLabel: Record<SidebarFilter, string> = {
+  const filterLabel: Record<string, string> = {
     recents: 'Recents',
     all: 'All Mind Maps',
     favorites: 'Favorites',
-    personal: 'Personal',
   };
+
+  // Resolve dynamic workplace names for the label
+  const activeWorkspaceName = workspaces.find(w => w.id === activeFilter)?.name;
+  const currentFilterLabel = filterLabel[activeFilter] || activeWorkspaceName || activeFilter;
 
   const isEmpty = filteredSpaces.length === 0;
   const hasSpaces = spaces.length > 0;
@@ -178,7 +182,7 @@ export const SpaceManager: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text-muted)', fontSize: '13px' }}>
               <span style={{ cursor: 'pointer' }} onClick={() => setActiveFilter('all')}>Home</span>
               <ChevronRight size={14} />
-              <span style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>{filterLabel[activeFilter]}</span>
+              <span style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>{currentFilterLabel}</span>
               {searchQuery && (
                 <>
                   <ChevronRight size={14} />

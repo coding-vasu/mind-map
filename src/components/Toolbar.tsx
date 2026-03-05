@@ -1,7 +1,5 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { 
-  Download, 
-  Upload, 
   Trash2, 
   Plus, 
   Undo2, 
@@ -11,7 +9,6 @@ import {
   Edit2, 
   Zap, 
   GitBranchPlus, 
-  Image,
   Home,
   CircleDot,
   Lightbulb,
@@ -31,6 +28,7 @@ import { ToolbarButton } from './toolbar/ToolbarButton';
 import { SearchInput } from './toolbar/SearchInput';
 import { LayoutPopover } from './toolbar/LayoutPopover';
 import { AppearancePopover } from './toolbar/AppearancePopover';
+import { IOPopover } from './toolbar/IOPopover';
 
 /**
  * Main Toolbar component that provides controls for the mind map
@@ -39,6 +37,7 @@ export const Toolbar: React.FC = () => {
   const {
     nodes,
     edges,
+    addRootNode,
     addNode,
     addSibling,
     deleteNode,
@@ -62,9 +61,11 @@ export const Toolbar: React.FC = () => {
     exitSpace,
     spaces,
     activeSpaceId,
+    updateSpaceName,
   } = useStore(useShallow((state) => ({
     nodes: state.nodes,
     edges: state.edges,
+    addRootNode: state.addRootNode,
     addNode: state.addNode,
     addSibling: state.addSibling,
     deleteNode: state.deleteNode,
@@ -88,7 +89,9 @@ export const Toolbar: React.FC = () => {
     exitSpace: state.exitSpace,
     spaces: state.spaces,
     activeSpaceId: state.activeSpaceId,
+    updateSpaceName: state.updateSpaceName,
   })));
+
 
   const { undo, redo, pastStates, futureStates } = useZustandStore(
     useStore.temporal,
@@ -104,25 +107,72 @@ export const Toolbar: React.FC = () => {
   const activeSpace = useMemo(() => spaces.find(s => s.id === activeSpaceId), [spaces, activeSpaceId]);
   const selectedNodes = useMemo(() => nodes.filter((n) => n.selected), [nodes]);
   const selectedEdges = useMemo(() => edges.filter((e) => e.selected), [edges]);
+  
+  // Calculate the layout direction for the selected node's root
+  const displayLayoutDirection = useMemo(() => {
+    if (selectedNodes.length === 0) return layoutDirection;
+    
+    // Find the root node for the first selected node
+    let current = selectedNodes[0];
+    const processedIds = new Set<string>();
+    
+    while (current) {
+      if (processedIds.has(current.id)) break;
+      processedIds.add(current.id);
+      
+      const parentEdge = edges.find(e => e.target === current.id);
+      if (!parentEdge) break;
+      const parent = nodes.find(n => n.id === parentEdge.source);
+      if (!parent) break;
+      current = parent;
+    }
+    
+    return current?.data?.layoutDirection || layoutDirection;
+  }, [selectedNodes, nodes, edges, layoutDirection]);
+
+  // Calculate the color mode and palette for the selected node's root
+  const { displayColorMode, displayPaletteName } = useMemo(() => {
+    if (selectedNodes.length === 0) return { displayColorMode: colorMode, displayPaletteName: activePaletteName };
+    
+    // Find the root node for the first selected node
+    let current = selectedNodes[0];
+    const processedIds = new Set<string>();
+    
+    while (current) {
+      if (processedIds.has(current.id)) break;
+      processedIds.add(current.id);
+      
+      const parentEdge = edges.find(e => e.target === current.id);
+      if (!parentEdge) break;
+      const parent = nodes.find(n => n.id === parentEdge.source);
+      if (!parent) break;
+      current = parent;
+    }
+    
+    return {
+      displayColorMode: current?.data?.colorMode || colorMode,
+      displayPaletteName: current?.data?.activePaletteName || activePaletteName
+    };
+  }, [selectedNodes, nodes, edges, colorMode, activePaletteName]);
 
   // Static Configuration
   const nodeMoods = useMemo(() => [
-    { name: 'Neutral', color: theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)', icon: <CircleDot size={14} /> },
-    { name: 'Idea', color: 'rgba(124, 58, 237, 0.6)', icon: <Lightbulb size={14} /> },
-    { name: 'Task', color: 'rgba(59, 130, 246, 0.6)', icon: <CheckCircle2 size={14} /> },
-    { name: 'Alert', color: 'rgba(239, 68, 68, 0.6)', icon: <AlertTriangle size={14} /> },
-    { name: 'Pending', color: 'rgba(245, 158, 11, 0.6)', icon: <Clock size={14} /> },
-    { name: 'Solved', color: 'rgba(16, 185, 129, 0.6)', icon: <CheckCircle2 size={14} /> },
+    { name: 'Neutral', color: theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)', icon: <CircleDot size={12} /> },
+    { name: 'Idea', color: 'rgba(124, 58, 237, 0.6)', icon: <Lightbulb size={12} /> },
+    { name: 'Task', color: 'rgba(59, 130, 246, 0.6)', icon: <CheckCircle2 size={12} /> },
+    { name: 'Alert', color: 'rgba(239, 68, 68, 0.6)', icon: <AlertTriangle size={12} /> },
+    { name: 'Pending', color: 'rgba(245, 158, 11, 0.6)', icon: <Clock size={12} /> },
+    { name: 'Solved', color: 'rgba(16, 185, 129, 0.6)', icon: <CheckCircle2 size={12} /> },
   ], [theme]);
 
   const layerLabels = ['Primary', 'Major', 'Minor', 'Branch', 'Detail', 'Twig'];
 
   const nodeShapes = [
-    { name: 'Classic', value: 'rect', icon: <Square size={14} /> },
-    { name: 'Pill', value: 'pill', icon: <div style={{ width: '14px', height: '10px', borderRadius: '5px', border: '1.5px solid currentColor' }} /> },
-    { name: 'Diamond', value: 'diamond', icon: <Diamond size={14} /> },
-    { name: 'Hexagon', value: 'hexagon', icon: <Hexagon size={14} /> },
-    { name: 'Capsule', value: 'capsule', icon: <div style={{ width: '16px', height: '10px', borderRadius: '10px', background: 'currentColor', opacity: 0.5 }} /> },
+    { name: 'Classic', value: 'rect', icon: <Square size={12} /> },
+    { name: 'Pill', value: 'pill', icon: <div style={{ width: '12px', height: '8px', borderRadius: '4px', border: '1.2px solid currentColor' }} /> },
+    { name: 'Diamond', value: 'diamond', icon: <Diamond size={12} /> },
+    { name: 'Hexagon', value: 'hexagon', icon: <Hexagon size={12} /> },
+    { name: 'Capsule', value: 'capsule', icon: <div style={{ width: '14px', height: '8px', borderRadius: '8px', background: 'currentColor', opacity: 0.5 }} /> },
   ] as const;
 
   const palettes = useMemo(() => [
@@ -155,19 +205,56 @@ export const Toolbar: React.FC = () => {
   };
 
   const onExportImage = () => {
-    const element = document.querySelector('.react-flow__viewport') as HTMLElement;
-    if (!element) return;
-    toPng(element, {
-      backgroundColor: theme === 'dark' ? '#0a0a0f' : '#f4f4f9',
+    // Target the viewport to avoid capturing ambient blobs and heavy background effects
+    const viewportElement = document.querySelector('.react-flow__viewport') as HTMLElement;
+    if (!viewportElement) return;
+
+    // Hide UI elements during capture
+    const reactFlow = document.querySelector('.react-flow') as HTMLElement;
+    const controls = reactFlow?.querySelector('.react-flow__controls') as HTMLElement;
+    const minimap = reactFlow?.querySelector('.react-flow__minimap') as HTMLElement;
+    const attribution = reactFlow?.querySelector('.react-flow__attribution') as HTMLElement;
+
+    if (controls) controls.style.display = 'none';
+    if (minimap) minimap.style.display = 'none';
+    if (attribution) attribution.style.display = 'none';
+
+    // Capture the refined viewport
+    toPng(viewportElement, {
+      backgroundColor: theme === 'dark' ? '#0a0a0f' : '#f8f9ff',
       cacheBust: true,
+      pixelRatio: 1.5, // Balanced for quality vs memory
+      skipFonts: true,
+      filter: (node) => {
+        // Skip any UI elements or heavy effects that might have leaked into the viewport
+        if (node.classList?.contains('react-flow__controls')) return false;
+        if (node.classList?.contains('react-flow__minimap')) return false;
+        return true;
+      }
     })
       .then((dataUrl) => {
         const link = document.createElement('a');
-        link.download = 'mindmap.png';
+        link.download = `mindmap-${activeSpace?.name || 'capture'}.png`;
         link.href = dataUrl;
         link.click();
       })
-      .catch(err => console.error('Image export failed:', err));
+      .catch(err => {
+        console.error('Image capture failed:', err);
+        alert('Capture failed. For large maps, try zooming in closer to a specific section before exporting.');
+      })
+      .finally(() => {
+        if (controls) controls.style.display = 'flex';
+        if (minimap) minimap.style.display = 'block';
+        if (attribution) attribution.style.display = 'block';
+      });
+  };
+
+  const onExportJSON = () => {
+    onExport();
+  };
+
+  const onImportClick = () => {
+    fileInputRef.current?.click();
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -191,59 +278,107 @@ export const Toolbar: React.FC = () => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
+  const [isRenamingSpace, setIsRenamingSpace] = React.useState(false);
+  const spaceRenameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isRenamingSpace && spaceRenameInputRef.current) {
+      spaceRenameInputRef.current.focus();
+      spaceRenameInputRef.current.select();
+    }
+  }, [isRenamingSpace]);
+
   return (
     <div className="frosted-glass animate-slide-in" style={{
       display: 'flex',
       alignItems: 'center',
-      gap: '4px',
-      padding: '4px 6px',
-      borderRadius: '32px',
+      gap: '2px',
+      padding: '2px 4px',
+      borderRadius: '24px',
     }}>
       {/* Home & Space Name */}
-      <div style={{ display: 'flex', gap: '4px', padding: '0 8px', borderRight: '1px solid var(--color-border-subtle)', alignItems: 'center' }}>
-        <ToolbarButton onClick={exitSpace} title="All Spaces" icon={<Home size={20} />} />
+      <div style={{ display: 'flex', gap: '2px', padding: '0 6px', borderRight: '1px solid var(--color-border-subtle)', alignItems: 'center' }}>
+        <ToolbarButton onClick={exitSpace} title="All Spaces" icon={<Home size={18} />} />
         {activeSpace && (
-          <div style={{ 
-            fontSize: '13px', 
-            fontWeight: 700, 
-            color: 'var(--color-text-primary)',
-            padding: '0 8px',
-            maxWidth: '120px',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            opacity: 0.8
-          }}>
-            {activeSpace.name}
-          </div>
+          isRenamingSpace ? (
+            <input
+              ref={spaceRenameInputRef}
+              value={activeSpace.name}
+              onChange={(e) => updateSpaceName(activeSpace.id, e.target.value)}
+              onBlur={() => setIsRenamingSpace(false)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') setIsRenamingSpace(false);
+                if (e.key === 'Escape') setIsRenamingSpace(false);
+              }}
+              style={{ 
+                fontSize: '13px', 
+                fontWeight: 700, 
+                color: 'var(--color-text-primary)',
+                padding: '2px 8px',
+                maxWidth: '120px',
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid var(--color-accent-bright)',
+                outline: 'none',
+                borderRadius: '6px',
+              }}
+            />
+          ) : (
+            <div 
+              onDoubleClick={() => setIsRenamingSpace(true)}
+              style={{ 
+                fontSize: '13px', 
+                fontWeight: 700, 
+                color: 'var(--color-text-primary)',
+                padding: '2px 8px',
+                maxWidth: '120px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                opacity: 0.8,
+                cursor: 'pointer',
+                borderRadius: '4px',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              title="Double click to rename"
+            >
+              {activeSpace.name}
+            </div>
+          )
         )}
       </div>
 
       {/* Node Actions */}
-      <div style={{ display: 'flex', gap: '4px', padding: '0 8px', borderRight: '1px solid var(--color-border-subtle)' }}>
+      <div style={{ display: 'flex', gap: '2px', padding: '0 6px', borderRight: '1px solid var(--color-border-subtle)' }}>
         <ToolbarButton 
           onClick={() => setBrainstorming(!isBrainstorming)} 
           title="Brainstorm Mode (B)" 
           active={isBrainstorming}
-          icon={<Zap size={20} fill={isBrainstorming ? 'currentColor' : 'none'} />} 
+          icon={<Zap size={18} fill={isBrainstorming ? 'currentColor' : 'none'} />} 
         />
-        <div style={{ width: '1px', height: '24px', background: 'var(--color-border-subtle)', margin: '0 4px' }} />
+        <ToolbarButton 
+          onClick={() => addRootNode()} 
+          title="Add New Mind Map (Option+N)" 
+          icon={<GitBranchPlus size={18} />} 
+        />
+        <div style={{ width: '1px', height: '20px', background: 'var(--color-border-subtle)', margin: '0 2px' }} />
         <ToolbarButton 
           onClick={() => addNode(selectedNodes[0]?.id || 'root')} 
           title="Add Child (Tab)" 
-          icon={<Plus size={20} />} 
+          icon={<Plus size={18} />} 
         />
         <ToolbarButton 
           onClick={() => selectedNodes[0] && addSibling(selectedNodes[0].id)} 
           title="Add Sibling (Enter)" 
           disabled={selectedNodes.length === 0 || selectedNodes[0].id === 'root'} 
-          icon={<GitBranchPlus size={20} />} 
+          icon={<GitBranchPlus size={18} />} 
         />
         <ToolbarButton 
           onClick={() => deleteNode(selectedNodes[0].id)} 
           title="Delete Node (Del)" 
           disabled={selectedNodes.length === 0 || selectedNodes[0].id === 'root'} 
-          icon={<Trash2 size={20} />} 
+          icon={<Trash2 size={18} />} 
         />
       </div>
 
@@ -271,19 +406,19 @@ export const Toolbar: React.FC = () => {
       )}
 
       {/* History & Theme */}
-      <div style={{ display: 'flex', gap: '4px', padding: '0 8px', borderRight: '1px solid var(--color-border-subtle)' }}>
-        <ToolbarButton onClick={undo} title="Undo (⌘Z)" disabled={pastStates.length === 0} icon={<Undo2 size={20} />} />
-        <ToolbarButton onClick={redo} title="Redo (⌘⇧Z)" disabled={futureStates.length === 0} icon={<Redo2 size={20} />} />
+      <div style={{ display: 'flex', gap: '2px', padding: '0 6px', borderRight: '1px solid var(--color-border-subtle)' }}>
+        <ToolbarButton onClick={undo} title="Undo (⌘Z)" disabled={pastStates.length === 0} icon={<Undo2 size={18} />} />
+        <ToolbarButton onClick={redo} title="Redo (⌘⇧Z)" disabled={futureStates.length === 0} icon={<Redo2 size={18} />} />
         <ToolbarButton 
           onClick={toggleTheme} 
           title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`} 
-          icon={theme === 'light' ? <Moon size={20} /> : <Sun size={20} />} 
+          icon={theme === 'light' ? <Moon size={18} /> : <Sun size={18} />} 
         />
       </div>
 
       {/* Overlays (Appearance & Layout) */}
-      <div style={{ display: 'flex', gap: '4px', padding: '0 8px', borderRight: '1px solid var(--color-border-subtle)' }}>
-        <LayoutPopover layoutDagre={layoutDagre} layoutDirection={layoutDirection} />
+      <div style={{ display: 'flex', gap: '2px', padding: '0 6px', borderRight: '1px solid var(--color-border-subtle)' }}>
+        <LayoutPopover layoutDagre={layoutDagre} layoutDirection={displayLayoutDirection} />
         <AppearancePopover 
           selectedNodes={selectedNodes}
           updateNodeColor={updateNodeColor}
@@ -291,10 +426,10 @@ export const Toolbar: React.FC = () => {
           depthColors={depthColors}
           setDepthColor={setDepthColor}
           recalculateDepths={recalculateDepths}
-          colorMode={colorMode}
+          colorMode={displayColorMode}
           setColorMode={setColorMode}
           applyPalette={applyPalette}
-          activePaletteName={activePaletteName}
+          activePaletteName={displayPaletteName}
           palettes={palettes}
           nodeMoods={nodeMoods}
           nodeShapes={nodeShapes}
@@ -303,15 +438,17 @@ export const Toolbar: React.FC = () => {
       </div>
 
       {/* IO Actions */}
-      <div style={{ display: 'flex', gap: '4px', padding: '0 8px', borderRight: '1px solid var(--color-border-subtle)' }}>
-        <ToolbarButton onClick={onExportImage} title="Export Image" icon={<Image size={20} />} />
-        <ToolbarButton onClick={onExport} title="Save File" icon={<Download size={20} />} />
-        <ToolbarButton onClick={() => fileInputRef.current?.click()} title="Open File" icon={<Upload size={20} />} />
+      <div style={{ display: 'flex', gap: '2px', padding: '0 6px' }}>
+        <IOPopover 
+          onExportImage={onExportImage}
+          onExportJSON={onExportJSON}
+          onImportClick={onImportClick}
+        />
         <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".json" onChange={handleFileChange} />
       </div>
 
       {/* Search */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '16px', paddingRight: '12px', minWidth: '240px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: '4px', paddingRight: '4px' }}>
         <SearchInput nodes={nodes} />
       </div>
     </div>

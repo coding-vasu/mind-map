@@ -16,35 +16,107 @@ export interface LayoutResult {
 }
 
 /**
- * Arranges nodes using the Dagre layout engine
- * @param nodes Current nodes
- * @param edges Current edges
- * @param direction Layout direction
+ * Arranges nodes using the Dagre layout engine, supporting multiple roots with individual directions
  */
 export const getLayoutedElements = (
   nodes: AppNode[],
   edges: Edge[],
-  direction: LayoutDirection = 'LR'
+  globalDirection: LayoutDirection = 'TB'
 ): LayoutResult => {
-  if (direction === 'radial') {
-    return getRadialLayout(nodes, edges);
+  const activeNodes = nodes.filter(n => !n.hidden);
+  const activeEdges = edges.filter(e => !e.hidden);
+
+  // 1. Identify all root nodes
+  const roots = activeNodes.filter(n => !activeEdges.some(e => e.target === n.id));
+  
+  if (roots.length === 0 && activeNodes.length > 0) {
+    // Fallback if there's a cycle or something weird, treat the first node as root for layout
+    roots.push(activeNodes[0]);
   }
 
+  const finalNodes = [...nodes];
+  const finalEdges: Edge[] = [...edges].map(e => ({ ...e, sourceHandle: null }));
+
+  roots.forEach((root) => {
+    const direction = root.data.layoutDirection || globalDirection;
+    
+    // Store original root position to anchor the layout
+    const originalRootPos = { x: root.position.x, y: root.position.y };
+    
+    // Identify participants in this root's tree
+    const treeNodeIds = new Set<string>();
+    const treeEdges: Edge[] = [];
+    
+    const collectTree = (nodeId: string) => {
+      if (treeNodeIds.has(nodeId)) return;
+      treeNodeIds.add(nodeId);
+      activeEdges.forEach(e => {
+        if (e.source === nodeId) {
+          treeEdges.push(e);
+          collectTree(e.target);
+        }
+      });
+    };
+    collectTree(root.id);
+
+    const treeNodes = activeNodes.filter(n => treeNodeIds.has(n.id));
+
+    let layoutResult: LayoutResult;
+    if (direction === 'radial') {
+      layoutResult = getRadialLayout(treeNodes, treeEdges, root.id);
+    } else {
+      layoutResult = getDagreLayout(treeNodes, treeEdges, direction, root.id);
+    }
+
+    // After layout, find the root's new calculated position
+    const layoutedRoot = layoutResult.nodes.find(n => n.id === root.id);
+    if (!layoutedRoot) return;
+
+    // Calculate how much the root moved from the origin (or its layouted position)
+    // and apply a correction so its final position matches its original position
+    const dx = originalRootPos.x - layoutedRoot.position.x;
+    const dy = originalRootPos.y - layoutedRoot.position.y;
+
+    // Apply offset to all nodes in this specific tree
+    layoutResult.nodes.forEach(ln => {
+      const idx = finalNodes.findIndex(fn => fn.id === ln.id);
+      if (idx !== -1) {
+        finalNodes[idx] = {
+          ...finalNodes[idx],
+          position: { x: ln.position.x + dx, y: ln.position.y + dy },
+          sourcePosition: ln.sourcePosition,
+          targetPosition: ln.targetPosition,
+        };
+      }
+    });
+
+    layoutResult.edges.forEach(le => {
+      const idx = finalEdges.findIndex(fe => fe.id === le.id);
+      if (idx !== -1) {
+        finalEdges[idx] = { ...finalEdges[idx], sourceHandle: le.sourceHandle };
+      }
+    });
+  });
+
+  return { nodes: finalNodes, edges: finalEdges };
+};
+
+/**
+ * Common Dagre logic for a single tree
+ */
+function getDagreLayout(nodes: AppNode[], edges: Edge[], direction: LayoutDirection, rootId: string): LayoutResult {
   const dg = new dagre.graphlib.Graph();
   dg.setDefaultEdgeLabel(() => ({}));
   dg.setGraph({ rankdir: direction, nodesep: 80, ranksep: 160 });
 
-  const activeNodes = nodes.filter(n => !n.hidden);
-  const activeEdges = edges.filter(e => !e.hidden);
-
-  activeNodes.forEach((n) => {
-    const isRoot = n.id === 'root';
-    const w = isRoot ? 220 : (activeEdges.some(e => e.source === n.id) ? 180 : 140);
-    const h = isRoot ? 80 : (activeEdges.some(e => e.source === n.id) ? 60 : 50);
+  nodes.forEach((n) => {
+    const isRoot = n.id === rootId;
+    const w = isRoot ? 220 : (edges.some(e => e.source === n.id) ? 180 : 140);
+    const h = isRoot ? 80 : (edges.some(e => e.source === n.id) ? 60 : 50);
     dg.setNode(n.id, { width: w, height: h });
   });
 
-  activeEdges.forEach((e) => {
+  edges.forEach((e) => {
     dg.setEdge(e.source, e.target);
   });
 
@@ -61,60 +133,47 @@ export const getLayoutedElements = (
 
   const nextNodes = nodes.map((n) => {
     const pos = dg.node(n.id);
-    if (pos && !n.hidden) {
-      return {
-        ...n,
-        position: { x: pos.x - (pos.width / 2), y: pos.y - (pos.height / 2) },
-        sourcePosition: s,
-        targetPosition: t,
-      };
-    }
-    return n;
+    return {
+      ...n,
+      position: { x: pos.x - (pos.width / 2), y: pos.y - (pos.height / 2) },
+      sourcePosition: s,
+      targetPosition: t,
+    };
   });
 
-  const nextEdges = edges.map(e => ({ ...e, sourceHandle: null }));
-
-  return { nodes: nextNodes, edges: nextEdges };
-};
+  return { nodes: nextNodes, edges: edges.map(e => ({ ...e, sourceHandle: null })) };
+}
 
 /**
- * Simplified radial/centered layout implementation
+ * Radial layout logic for a single tree
  */
-function getRadialLayout(nodes: AppNode[], edges: Edge[]): LayoutResult {
-  const rootNode = nodes.find(n => n.id === 'root');
+function getRadialLayout(nodes: AppNode[], edges: Edge[], rootId: string): LayoutResult {
+  const rootNode = nodes.find(n => n.id === rootId);
   if (!rootNode) return { nodes, edges };
 
-  const activeEdges = edges.filter(e => !e.hidden);
-  const rootChildren = activeEdges.filter(e => e.source === 'root').map(e => e.target);
+  const rootChildren = edges.filter(e => e.source === rootId).map(e => e.target);
   const leftChildren = rootChildren.slice(0, Math.ceil(rootChildren.length / 2));
   const rightChildren = rootChildren.slice(Math.ceil(rootChildren.length / 2));
 
-  /**
-   * Layout a specific subtree with a given direction
-   */
   const layoutSubtree = (children: string[], rankdir: 'LR' | 'RL') => {
     const g = new dagre.graphlib.Graph();
     g.setDefaultEdgeLabel(() => ({}));
     g.setGraph({ rankdir, nodesep: 80, ranksep: 120 });
 
     const subtreeNodes: string[] = [...children];
-    
-    /**
-     * Recursively find all descendants of a node.
-     */
     const getDescendants = (id: string) => {
-      const cds = activeEdges.filter(e => e.source === id).map(e => e.target);
+      const cds = edges.filter(e => e.source === id).map(e => e.target);
       cds.forEach(cid => { subtreeNodes.push(cid); getDescendants(cid); });
     };
     children.forEach(getDescendants);
 
     nodes.forEach(n => {
-      if (subtreeNodes.includes(n.id) && !n.hidden) g.setNode(n.id, { width: 180, height: 60 });
+      if (subtreeNodes.includes(n.id)) g.setNode(n.id, { width: 180, height: 60 });
     });
 
-    activeEdges.forEach(e => {
+    edges.forEach(e => {
       if (subtreeNodes.includes(e.source) && subtreeNodes.includes(e.target)) g.setEdge(e.source, e.target);
-      if (e.source === 'root' && children.includes(e.target)) {
+      if (e.source === rootId && children.includes(e.target)) {
          if (!g.hasNode('__root')) g.setNode('__root', { width: 1, height: 1 });
          g.setEdge('__root', e.target);
       }
@@ -124,9 +183,6 @@ function getRadialLayout(nodes: AppNode[], edges: Edge[]): LayoutResult {
     return { g, subtreeNodes };
   };
 
-  /**
-   * Layout the left and right subtrees independently based on the root node's children.
-   */
   const { g: leftGraph } = layoutSubtree(leftChildren, 'RL');
   const { g: rightGraph } = layoutSubtree(rightChildren, 'LR');
 
@@ -136,7 +192,7 @@ function getRadialLayout(nodes: AppNode[], edges: Edge[]): LayoutResult {
       const rPos = leftGraph.node('__root') || { x: 0, y: 0 };
       return {
         ...node,
-        position: { x: (nPos.x - rPos.x) - 200 - (nPos.width / 2), y: (nPos.y - rPos.y) - (nPos.height / 2) },
+        position: { x: (nPos.x - rPos.x) - 300 - (nPos.width / 2), y: (nPos.y - rPos.y) - (nPos.height / 2) },
         sourcePosition: Position.Left,
         targetPosition: Position.Right,
       };
@@ -145,18 +201,18 @@ function getRadialLayout(nodes: AppNode[], edges: Edge[]): LayoutResult {
       const rPos = rightGraph.node('__root') || { x: 0, y: 0 };
       return {
         ...node,
-        position: { x: (nPos.x - rPos.x) + 200 - (nPos.width / 2), y: (nPos.y - rPos.y) - (nPos.height / 2) },
+        position: { x: (nPos.x - rPos.x) + 300 - (nPos.width / 2), y: (nPos.y - rPos.y) - (nPos.height / 2) },
         sourcePosition: Position.Right,
         targetPosition: Position.Left,
       };
-    } else if (node.id === 'root') {
+    } else if (node.id === rootId) {
       return { ...node, position: { x: -110, y: -40 } };
     }
     return node;
   });
 
   const nextEdges = edges.map(edge => {
-    if (edge.source === 'root') {
+    if (edge.source === rootId) {
       return {
         ...edge,
         sourceHandle: leftChildren.includes(edge.target) ? 'left' : rightChildren.includes(edge.target) ? 'right' : null

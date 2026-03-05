@@ -6,6 +6,7 @@ import { type AppNode } from '../../store/types';
 interface MindMapContextMenuProps {
   children: React.ReactNode;
   selectedNodes: AppNode[];
+  addRootNode: (label?: string, position?: { x: number, y: number }) => void;
   addNode: (parentNodeId: string) => void;
   addSibling: (nodeId: string) => void;
   toggleTask: (nodeId: string) => void;
@@ -19,6 +20,7 @@ interface MindMapContextMenuProps {
 export const MindMapContextMenu: React.FC<MindMapContextMenuProps> = ({
   children,
   selectedNodes,
+  addRootNode,
   addNode,
   addSibling,
   toggleTask,
@@ -40,6 +42,18 @@ export const MindMapContextMenu: React.FC<MindMapContextMenuProps> = ({
             boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
           }}
         >
+          <ContextMenu.Item 
+            className="context-menu-item"
+            onSelect={() => {
+              // We want to add a root at the cursor position
+              addRootNode();
+            }}
+          >
+            <GitBranchPlus size={15} /> Add New Mind Map
+          </ContextMenu.Item>
+
+          <ContextMenu.Separator style={{ height: '1px', background: 'var(--color-border-subtle)', margin: '4px 8px' }} />
+
           <ContextMenu.Item 
             className="context-menu-item"
             onSelect={() => {
