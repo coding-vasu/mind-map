@@ -471,6 +471,11 @@ export const useStore = create<AppState>()(
                   wasAnyRootUpdated = true;
                 }
               });
+
+              // If no specific tree was targeted, update the global setting
+              if (!wasAnyRootUpdated) {
+                draft.layoutDirection = direction;
+              }
             }
 
             const activeDirection = direction || globalDir;
